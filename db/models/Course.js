@@ -102,8 +102,10 @@ module.exports = (sequelize) => {
 
     }, {sequelize});
     Course.associate = (models) => {
-        Course.belongsTo(models.User, { 
+        Course.hasOne(models.User, { 
             foreignKey: 'userId',
+            as: 'course',
+            allowNull: false,
         });
     }
     return Course;

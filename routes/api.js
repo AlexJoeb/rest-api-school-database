@@ -20,13 +20,14 @@ const bcryptjs = require("bcryptjs");
 
 // User Routes
 // Send a GET request to /api/users that returns thte current auth'd user. Return: 200
-router.get('/users', authUser, (req, res, next) => {
+router.get('/users', (req, res, next) => {
     try {
         const user = req.currentUser;
         res.status(200).json({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            emailAddress: user.emailAddress
+            user
+            // firstName: user.firstName,
+            // lastName: user.lastName,
+            // emailAddress: user.emailAddress
         });
     } catch (err) {
         next(err);
@@ -34,7 +35,7 @@ router.get('/users', authUser, (req, res, next) => {
 });
 
 // Send a POST request to /api/users to create a user, then redirect location to '/'. Return: 201
-router.post('/users', async (req, res, next) => {
+router.post('/users', authUser, async (req, res, next) => {
     try {
 
         // Encrpyt Password
@@ -67,10 +68,7 @@ router.post('/users', async (req, res, next) => {
                 await User.create(user);
 
                 // Redirection w/ 201 Location
-                res.status(201).json({
-                    "Message": "User successfully created!",
-                    "Same Email": sameEmail
-                }).end();
+                res.status(201).location('/');
             }
 
 
@@ -93,18 +91,19 @@ router.post('/users', async (req, res, next) => {
 // Course Routes
 
 // Send a GET request to /api/courses that returns a list of courses. Returns: 200
-router.get("/courses", async (req, res, next) => {
-    try {
-        const courses = await Course.findAll({
-            include: [{
-                model: User
-            }],
-        });
-
-        res.status(200).json(courses);
-    } catch (err) {
-        next(err);
-    }
+router.get("/courses", (req, res) => {
+    Course.findAll({
+        attributes: ['id', 'title', 'description', 'materialsNeeded'],
+        include: {
+            model: User,
+            require: true,
+            as: 'user',
+            attributes: ['id', 'firstName', 'lastName', 'emailAddress']
+        },
+    })
+    .then(result => res.status(200).json(result))
+    .catch(err => res.status(500).json({message: `Server error => ${err}`}));
+    
 });
 
 // Send a GET request to /api/courses/:id that returns information on a singular course. Return: 200
