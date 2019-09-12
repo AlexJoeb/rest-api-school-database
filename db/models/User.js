@@ -87,14 +87,15 @@ module.exports = (sequelize) => {
                     msg: "No value was found for updated at.",
                 }
             }
-        }
+        },
     }, {sequelize});
 
     User.associate = (models) => {
         User.hasMany(models.Course, {
-            foreignKey: 'userId',
-            as: 'user',
-            allowNull: false,
+            foreignKey: {
+                fieldName: 'userId',
+                allowNull: false,
+            },
         });
     }
 

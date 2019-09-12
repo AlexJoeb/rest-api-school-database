@@ -1,6 +1,8 @@
 // Import Sequelize
 const Sequelize = require('sequelize');
-const {models} = require('../index');
+const {
+    models
+} = require('../index');
 
 module.exports = (sequelize) => {
     class Course extends Sequelize.Model {}
@@ -100,12 +102,15 @@ module.exports = (sequelize) => {
             }
         },
 
-    }, {sequelize});
+    }, {
+        sequelize
+    });
     Course.associate = (models) => {
-        Course.hasOne(models.User, { 
-            foreignKey: 'userId',
-            as: 'course',
-            allowNull: false,
+        Course.hasOne(models.User, {
+            foreignKey: {
+                fieldName: 'id',
+                allowNull: false,
+            },
         });
     }
     return Course;
