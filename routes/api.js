@@ -1,11 +1,6 @@
 // Init Express
 const express = require('express');
 
-// Init Regex
-const Regex = require('regex');
-// My custom made regex expression for e-mail validation.
-const emailRegex = new Regex(/^([A-Za-z0-9]+\.?([A-Za-z0-9]+)?)@(\w+\.?(\w+)?).(com|gov|edu|net|org)$/);
-
 // Init Router
 const router = express.Router();
 
@@ -47,18 +42,40 @@ router.post('/users', async (req, res, next) => {
         user.password = bcryptjs.hashSync(user.password);
 
         const email = user.emailAddress;
-        if(!emailRegex.test(email)){
-            res.json({emailRegex}).end();
-            // const err = new Error("Email was not able to validate. Try a valid email.")
-            // err.status = 401;
-            // next(err);
-        }
-        console.log("I shouldn't be here...");
-        // Create User
-        await User.create(user);
 
-        // Redirection w/ 201 Location
-        res.location('/').status(201).end();
+        const emailRegex = new RegExp(/^([A-Za-z0-9]+\.?([A-Za-z0-9]+)?)@(\w+\.?(\w+)?).(com|gov|edu|net|org)$/);
+        const emailPass = emailRegex.test(email);
+
+        if (!emailPass) {
+            // Email does not match regex requirments.
+            const err = new Error("Your e-mail does not follow the patttern.");
+            err.status = 400;
+            next(err);
+        } else {
+            const sameEmail = await User.findAll({
+                where: {
+                    emailAddress: email,
+                }
+            });
+
+            if (sameEmail) {
+                const err = new Error("Your e-mail is already registered.");
+                err.status = 400;
+                next(err);
+            } else {
+                // Create User
+                await User.create(user);
+
+                // Redirection w/ 201 Location
+                res.status(201).json({
+                    "Message": "User successfully created!",
+                    "Same Email": sameEmail
+                }).end();
+            }
+
+
+        }
+
     } catch (err) {
         if (err.name === 'SequelizeValidationError') {
             // Only if errors due to Sequelize Validation
